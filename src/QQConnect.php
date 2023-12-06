@@ -13,6 +13,13 @@ class QQConnect extends Oauth
     private $keysArr;
     private $APIMap;
 
+    protected $appid;
+    protected $appkey;
+    protected $callback;
+    protected $scope;
+    protected $openid;
+    protected $access_token;
+
     /**
      * 构造方法
      */
@@ -121,6 +128,24 @@ class QQConnect extends Oauth
                 "https://graph.qq.com/cft_info/get_tenpay_addr",
                 array("ver" => 1,"limit" => 5,"offset" => 0,"format" => "json")
             )
+        );
+    }
+
+    // 初始化
+    public function init($openid, $access_token)
+    {
+        $this->appid = config('qqconnect.appid');
+        $this->appkey = config('qqconnect.appkey');
+        $this->callback = config('qqconnect.callback');
+        $this->scope = config('qqconnect.scope', 'get_user_info');
+
+        $this->openid = $openid;
+        $this->access_token = $access_token;
+
+        $this->keysArr = array(
+            "oauth_consumer_key" => $this->appid,
+            "access_token" => $this->access_token,
+            "openid" => $this->openid,
         );
     }
 
@@ -275,12 +300,6 @@ class Oauth
     public const GET_ACCESS_TOKEN_URL = "https://graph.qq.com/oauth2.0/token";
     public const GET_OPENID_URL = "https://graph.qq.com/oauth2.0/me";
 
-    protected $appid;
-    protected $appkey;
-    protected $callback;
-    protected $scope;
-    protected $openid;
-    protected $access_token;
     protected $userData;
 
     public function __construct()
@@ -290,24 +309,6 @@ class Oauth
         } else {
             $this->userData = Session::get('QC_userData');
         }
-    }
-
-    // 初始化
-    public function init($openid, $access_token)
-    {
-        $this->appid = config('qqconnect.appid');
-        $this->appkey = config('qqconnect.appkey');
-        $this->callback = config('qqconnect.callback');
-        $this->scope = config('qqconnect.scope', 'get_user_info');
-
-        $this->openid = $openid;
-        $this->access_token = $access_token;
-
-        $this->keysArr = array(
-            "oauth_consumer_key" => $this->appid,
-            "access_token" => $this->access_token,
-            "openid" => $this->openid,
-        );
     }
 
     public function qq_login()
