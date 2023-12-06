@@ -3,38 +3,28 @@
 namespace Superzc\QQConnect;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Log;
 use Superzc\QQConnect\Exceptions\DefaultException;
 
-class QQConnect
+class QQConnect extends Oauth
 {
     private $keysArr;
     private $APIMap;
-    protected $appid;
-    protected $appkey;
 
     /**
      * 构造方法
      */
     public function __construct($openid, $access_token)
     {
-        // $this->appid = $config->get('qqconnect.appid');
-        // $this->appkey = $config->get('qqconnect.appkey');
+        parent::__construct($openid, $access_token);
 
-        //如果access_token和openid为空，则从session里去取，适用于demo展示情形
-        if($access_token === "" || $openid === "") {
-            $this->keysArr = array(
-                "oauth_consumer_key" => (int)$this->recorder->readInc("appid"),
-                "access_token" => $this->recorder->read("access_token"),
-                "openid" => $this->recorder->read("openid")
-            );
-        } else {
-            $this->keysArr = array(
-                "oauth_consumer_key" => (int)$this->recorder->readInc("appid"),
-                "access_token" => $access_token,
-                "openid" => $openid
-            );
-        }
+        $this->keysArr = array(
+            "oauth_consumer_key" => $this->appid,
+            "access_token" => $access_token,
+            "openid" => $openid
+        );
 
         //初始化APIMap
         /*
@@ -181,7 +171,7 @@ class QQConnect
                         $arr[$tmpKey] = "@$filename";
 
                     } else {
-                        $this->error->showError("api调用参数错误", "未传入参数$tmpKey");
+                        throw new DefaultException('api调用参数错误: 未传入参数' . $tmpKey);
                     }
                 }
             }
@@ -199,18 +189,14 @@ class QQConnect
 
             if(!$n) {
                 $str = implode(",", $val);
-                $this->error->showError("api调用参数错误", $str . "必填一个");
+                throw new DefaultException('api调用参数错误: ' . $str . '必填一个');
             }
         }
 
         if($method == "POST") {
-            if($baseUrl == "https://graph.qq.com/blog/add_one_blog") {
-                $response = $this->urlUtils->post($baseUrl, $keysArr, 1);
-            } else {
-                $response = $this->urlUtils->post($baseUrl, $keysArr, 0);
-            }
+            $response = Http::post($baseUrl, $keysArr);
         } elseif($method == "GET") {
-            $response = $this->urlUtils->get($baseUrl, $keysArr);
+            $response = Http::get($baseUrl);
         }
 
         return $response;
@@ -229,7 +215,7 @@ class QQConnect
     {
         //如果APIMap不存在相应的api
         if(empty($this->APIMap[$name])) {
-            $this->error->showError("api调用名称错误", "不存在的API: <span style='color:red;'>$name</span>");
+            throw new DefaultException('api调用参数错误: 不存在的API' . $name);
         }
 
         //从APIMap获取api相应参数
@@ -254,7 +240,7 @@ class QQConnect
         if($responseArr['ret'] == 0) {
             return $responseArr;
         } else {
-            $this->error->showError($response->ret, $response->msg);
+            throw new DefaultException($response->msg, $response->ret);
         }
 
     }
@@ -272,19 +258,6 @@ class QQConnect
         return $arr;
     }
 
-
-    /**
-     * get_access_token
-     * 获得access_token
-     * @param void
-     * @since 5.0
-     * @return string 返加access_token
-     */
-    public function get_access_token()
-    {
-        return $this->recorder->read("access_token");
-    }
-
     //简单实现json到php数组转换功能
     private function simple_json_parser($json)
     {
@@ -298,4 +271,143 @@ class QQConnect
         return $arr;
     }
 
+}
+
+class Oauth
+{
+    public const VERSION = "2.0";
+    public const GET_AUTH_CODE_URL = "https://graph.qq.com/oauth2.0/authorize";
+    public const GET_ACCESS_TOKEN_URL = "https://graph.qq.com/oauth2.0/token";
+    public const GET_OPENID_URL = "https://graph.qq.com/oauth2.0/me";
+
+    protected $appid;
+    protected $appkey;
+    protected $callback;
+    protected $scope;
+    protected $userData;
+
+    public function __construct($openid, $access_token)
+    {
+        $this->appid = config('qqconnect.appid');
+        $this->appkey = config('qqconnect.appkey');
+        $this->callback = config('qqconnect.callback');
+        $this->scope = config('qqconnect.scope');
+
+        if(empty($_SESSION['QC_userData'])) {
+            $this->userData = [];
+        } else {
+            $this->userData = Session::get('QC_userData');
+        }
+    }
+
+    public function qq_login()
+    {
+        //-------生成唯一随机串防CSRF攻击
+        $state = md5(uniqid(rand(), true));
+
+        //-------构造请求参数列表
+        $keysArr = array(
+            "response_type" => "code",
+            "client_id" => $this->appid,
+            "redirect_uri" => $this->callback,
+            "state" => $state,
+            "scope" => $this->scope
+        );
+
+        $login_url =  $this->combineURL(self::GET_AUTH_CODE_URL, $keysArr);
+
+        header("Location:$login_url");
+    }
+
+    public function qq_callback()
+    {
+        $state = $this->userData['state'];
+
+        //--------验证state防止CSRF攻击
+        if(!$state || Request::get('state') != $state) {
+            throw new DefaultException('参数state不匹配，跨站请求异常');
+        }
+
+        //-------请求参数列表
+        $keysArr = array(
+            "grant_type" => "authorization_code",
+            "client_id" => $this->appid,
+            "redirect_uri" => urlencode($this->callback),
+            "client_secret" => $this->appkey,
+            "code" => Request::get('code')
+        );
+
+        //------构造请求access_token的url
+        $token_url = $this->combineURL(self::GET_ACCESS_TOKEN_URL, $keysArr);
+        $response = Http::get($token_url);
+
+        if(strpos($response, "callback") !== false) {
+            $lpos = strpos($response, "(");
+            $rpos = strrpos($response, ")");
+            $response  = substr($response, $lpos + 1, $rpos - $lpos - 1);
+            $msg = json_decode($response);
+
+            if(isset($msg->error)) {
+                throw new DefaultException($msg->error_description, $msg->error);
+            }
+        }
+
+        $params = array();
+        parse_str($response, $params);
+
+        $this->userData['access_token'] = $params['access_token'];
+        return $params['access_token'];
+
+    }
+
+    public function get_openid()
+    {
+
+        //-------请求参数列表
+        $keysArr = [
+            "access_token" => $this->userData['access_token']
+        ];
+
+        $graph_url = $this->combineURL(self::GET_OPENID_URL, $keysArr);
+        $response = Http::get($graph_url);
+
+        //--------检测错误是否发生
+        if(strpos($response, "callback") !== false) {
+            $lpos = strpos($response, "(");
+            $rpos = strrpos($response, ")");
+            $response = substr($response, $lpos + 1, $rpos - $lpos - 1);
+        }
+
+        $user = json_decode($response);
+        if(isset($user->error)) {
+            throw new DefaultException($user->error_description, $user->error)
+        }
+
+        //------记录openid
+        $this->userData['openid'] = $user->openid;
+        return $user->openid;
+
+    }
+
+    /**
+    * combineURL
+    * 拼接url
+    * @param string $baseURL   基于的url
+    * @param array  $keysArr   参数列表数组
+    * @return string           返回拼接的url
+    */
+    private function combineURL($baseURL, $keysArr)
+    {
+        $combined = $baseURL . "?";
+        $valueArr = array();
+
+        foreach($keysArr as $key => $val) {
+            $valueArr[] = "$key=$val";
+        }
+
+        $keyStr = implode("&", $valueArr);
+        $combined .= ($keyStr);
+
+        return $combined;
+    }
 }

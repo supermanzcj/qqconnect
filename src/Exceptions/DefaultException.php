@@ -1,6 +1,6 @@
 <?php
 
-namespace Superzc\Miniprogram\Exceptions;
+namespace Superzc\QQConnect\Exceptions;
 
 use Exception;
 use Illuminate\Http\Request;
@@ -11,7 +11,7 @@ class DefaultException extends Exception
     public function render(Request $request)
     {
         return response()->json([
-            'ret' => -1,
+            'ret' => $this->getCode(),
             'msg' => $this->getMessage(),
         ], 400);
     }
