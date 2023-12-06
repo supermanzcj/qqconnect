@@ -125,7 +125,7 @@ class QQConnect extends Oauth
     }
 
     // 初始化
-    private function init($openid, $access_token)
+    public function init($openid, $access_token)
     {
         $this->appid = config('qqconnect.appid');
         $this->appkey = config('qqconnect.appkey');
