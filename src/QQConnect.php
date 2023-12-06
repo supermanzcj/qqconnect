@@ -134,6 +134,14 @@ class QQConnect extends Oauth
     // 初始化
     public function init($openid, $access_token)
     {
+        // 校验参数
+        if ($openid == '') {
+            throw new DefaultException('缺少参数openid');
+        }
+        if ($access_token == '') {
+            throw new DefaultException('缺少参数access_token');
+        }
+
         $this->appid = config('qqconnect.appid');
         $this->appkey = config('qqconnect.appkey');
         $this->callback = config('qqconnect.callback');
