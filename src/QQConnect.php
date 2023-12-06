@@ -124,6 +124,7 @@ class QQConnect extends Oauth
         );
     }
 
+    // 初始化
     private function init($openid, $access_token)
     {
         $this->appid = config('qqconnect.appid');
@@ -141,7 +142,7 @@ class QQConnect extends Oauth
         );
     }
 
-    //调用相应api
+    // 调用相应api
     private function _applyAPI($arr, $argsList, $baseUrl, $method)
     {
         $pre = "#";
