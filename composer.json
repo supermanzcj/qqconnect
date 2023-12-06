@@ -1,0 +1,17 @@
+{
+    "name": "superzc/qqconnect",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Superzc\\Qqconnect\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "supermanzcj",
+            "email": "supermanzcj@gmail.com"
+        }
+    ],
+    "require": {}
+}
