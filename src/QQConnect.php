@@ -291,7 +291,7 @@ class Oauth
         $this->appid = config('qqconnect.appid');
         $this->appkey = config('qqconnect.appkey');
         $this->callback = config('qqconnect.callback');
-        $this->scope = config('qqconnect.scope');
+        $this->scope = config('qqconnect.scope', 'get_user_info');
 
         if(empty($_SESSION['QC_userData'])) {
             $this->userData = [];

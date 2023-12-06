@@ -30,4 +30,9 @@ class QQConnectServiceProvider extends ServiceProvider
             return new QQConnect($params['openid'], $params['access_token']);
         });
     }
+
+    public static function create($openid, $access_token)
+    {
+        return new self($openid, $access_token);
+    }
 }
