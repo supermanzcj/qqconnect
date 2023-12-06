@@ -16,9 +16,9 @@ class QQConnect extends Oauth
     /**
      * 构造方法
      */
-    public function __construct($openid, $access_token)
+    public function __construct()
     {
-        parent::__construct($openid, $access_token);
+        parent::__construct();
 
         $this->keysArr = array(
             "oauth_consumer_key" => $this->appid,
@@ -287,18 +287,21 @@ class Oauth
     protected $scope;
     protected $userData;
 
-    public function __construct($openid, $access_token)
+    public function __construct()
+    {
+        if(empty(Session::get('QC_userData'))) {
+            $this->userData = [];
+        } else {
+            $this->userData = Session::get('QC_userData');
+        }
+    }
+
+    protected function init($openid, $access_token)
     {
         $this->appid = config('qqconnect.appid');
         $this->appkey = config('qqconnect.appkey');
         $this->callback = config('qqconnect.callback');
         $this->scope = config('qqconnect.scope', 'get_user_info');
-
-        if(empty($_SESSION['QC_userData'])) {
-            $this->userData = [];
-        } else {
-            $this->userData = Session::get('QC_userData');
-        }
     }
 
     public function qq_login()
