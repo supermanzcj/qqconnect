@@ -4,14 +4,20 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Superzc\\Qqconnect\\": "src/"
+            "Superzc\\QQConnect\\": "src/"
         }
     },
     "authors": [
         {
-            "name": "supermanzcj",
-            "email": "supermanzcj@gmail.com"
+            "name": "superzc"
         }
     ],
-    "require": {}
+    "require": {},
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Superzc\\QQConnect\\QQConnectServiceProvider"
+            ]
+        }
+    }
 }
