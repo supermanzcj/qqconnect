@@ -20,12 +20,6 @@ class QQConnect extends Oauth
     {
         parent::__construct();
 
-        $this->keysArr = array(
-            "oauth_consumer_key" => $this->appid,
-            "access_token" => $access_token,
-            "openid" => $openid
-        );
-
         //初始化APIMap
         /*
          * 加#表示非必须，无则不传入url(url中不会出现该参数)， "key" => "val" 表示key如果没有定义则使用默认值val
@@ -285,6 +279,8 @@ class Oauth
     protected $appkey;
     protected $callback;
     protected $scope;
+    protected $openid;
+    protected $access_token;
     protected $userData;
 
     public function __construct()
@@ -302,6 +298,15 @@ class Oauth
         $this->appkey = config('qqconnect.appkey');
         $this->callback = config('qqconnect.callback');
         $this->scope = config('qqconnect.scope', 'get_user_info');
+
+        $this->openid = $openid;
+        $this->access_token = $access_token;
+
+        $this->keysArr = array(
+            "oauth_consumer_key" => $this->appid,
+            "access_token" => $this->access_token,
+            "openid" => $this->openid,
+        );
     }
 
     public function qq_login()
