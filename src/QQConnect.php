@@ -380,7 +380,7 @@ class Oauth
 
         $user = json_decode($response);
         if(isset($user->error)) {
-            throw new DefaultException($user->error_description, $user->error)
+            throw new DefaultException($user->error_description, $user->error);
         }
 
         //------记录openid
