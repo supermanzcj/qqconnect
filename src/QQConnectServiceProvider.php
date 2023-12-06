@@ -26,13 +26,8 @@ class QQConnectServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('qqconnect', function ($app, $params) {
-            return new QQConnect($params['openid'], $params['access_token']);
+        $this->app->singleton('qqconnect', function ($app) {
+            return new QQConnect();
         });
-    }
-
-    public static function create($openid, $access_token)
-    {
-        return new self($openid, $access_token);
     }
 }

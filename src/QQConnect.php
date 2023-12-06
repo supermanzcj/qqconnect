@@ -196,6 +196,7 @@ class QQConnect extends Oauth
         if($method == "POST") {
             $response = Http::post($baseUrl, $keysArr);
         } elseif($method == "GET") {
+            $baseUrl = $this->combineURL($baseUrl, $keysArr);
             $response = Http::get($baseUrl);
         }
 
@@ -215,7 +216,7 @@ class QQConnect extends Oauth
     {
         //如果APIMap不存在相应的api
         if(empty($this->APIMap[$name])) {
-            throw new DefaultException('api调用参数错误: 不存在的API' . $name);
+            throw new DefaultException('API调用参数错误，不存在的API: ' . $name);
         }
 
         //从APIMap获取api相应参数
@@ -396,9 +397,9 @@ class Oauth
     * @param array  $keysArr   参数列表数组
     * @return string           返回拼接的url
     */
-    private function combineURL($baseURL, $keysArr)
+    protected function combineURL($baseUrl, $keysArr)
     {
-        $combined = $baseURL . "?";
+        $combined = $baseUrl . "?";
         $valueArr = array();
 
         foreach($keysArr as $key => $val) {
