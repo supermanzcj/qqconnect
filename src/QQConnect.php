@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Log;
 use Superzc\QQConnect\Exceptions\DefaultException;
+use Superzc\QQConnect\Constants\ErrorCodes;
 
 class QQConnect extends Oauth
 {
@@ -136,10 +137,10 @@ class QQConnect extends Oauth
     {
         // 校验参数
         if ($openid == '') {
-            throw new DefaultException('缺少参数openid');
+            throw new DefaultException('缺少参数openid', ErrorCodes::INVALID_PARAMS);
         }
         if ($access_token == '') {
-            throw new DefaultException('缺少参数access_token');
+            throw new DefaultException('缺少参数access_token', ErrorCodes::INVALID_PARAMS);
         }
 
         $this->appid = config('qqconnect.appid');
@@ -198,7 +199,7 @@ class QQConnect extends Oauth
                         $arr[$tmpKey] = "@$filename";
 
                     } else {
-                        throw new DefaultException('api调用参数错误: 未传入参数' . $tmpKey);
+                        throw new DefaultException('api调用参数错误: 未传入参数' . $tmpKey, ErrorCodes::SERVICE_UNAVAILABLE);
                     }
                 }
             }
@@ -216,7 +217,7 @@ class QQConnect extends Oauth
 
             if(!$n) {
                 $str = implode(",", $val);
-                throw new DefaultException('api调用参数错误: ' . $str . '必填一个');
+                throw new DefaultException('api调用参数错误: ' . $str . '必填一个', ErrorCodes::SERVICE_UNAVAILABLE);
             }
         }
 
@@ -243,7 +244,7 @@ class QQConnect extends Oauth
     {
         //如果APIMap不存在相应的api
         if(empty($this->APIMap[$name])) {
-            throw new DefaultException('API调用参数错误，不存在的API: ' . $name);
+            throw new DefaultException('API调用参数错误，不存在的API: ' . $name, ErrorCodes::SERVICE_UNAVAILABLE);
         }
 
         //从APIMap获取api相应参数
@@ -268,7 +269,7 @@ class QQConnect extends Oauth
         if($responseArr['ret'] == 0) {
             return $responseArr;
         } else {
-            throw new DefaultException($response->msg, $response->ret);
+            throw new DefaultException($response->msg, ErrorCodes::SERVICE_UNAVAILABLE);
         }
 
     }
@@ -344,7 +345,7 @@ class Oauth
 
         //--------验证state防止CSRF攻击
         if(!$state || Request::get('state') != $state) {
-            throw new DefaultException('参数state不匹配，跨站请求异常');
+            throw new DefaultException('参数state不匹配，跨站请求异常', ErrorCodes::INVALID_PARAMS);
         }
 
         //-------请求参数列表
@@ -367,7 +368,7 @@ class Oauth
             $msg = json_decode($response);
 
             if(isset($msg->error)) {
-                throw new DefaultException($msg->error_description, $msg->error);
+                throw new DefaultException($msg->error_description, ErrorCodes::SERVICE_UNAVAILABLE);
             }
         }
 
@@ -399,7 +400,7 @@ class Oauth
 
         $user = json_decode($response);
         if(isset($user->error)) {
-            throw new DefaultException($user->error_description, $user->error);
+            throw new DefaultException($user->error_description, ErrorCodes::SERVICE_UNAVAILABLE);
         }
 
         //------记录openid
