@@ -28,7 +28,8 @@ $result = $qqconnect->doSomething();
 ```php
 use Superzc\QQConnect\Facades\QQConnect;
 
-$result = QQConnect::doSomething($openid, $access_token);
+QQConnect::init($openid, $access_token);
+$result = QQConnect::doSomething();
 ```
 
 
