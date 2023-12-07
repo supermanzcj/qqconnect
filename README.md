@@ -20,7 +20,8 @@ composer require superzc/qqconnect
 ```php
 use Superzc\QQConnect\QQConnect;
 
-$qqconnect = new QQConnect($openid, $access_token);
+$qqconnect = new QQConnect();
+$qqconnect->init($openid, $access_token);
 $result = $qqconnect->doSomething();
 ```
 
