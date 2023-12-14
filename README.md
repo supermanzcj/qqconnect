@@ -19,20 +19,34 @@ composer require superzc/qqconnect
 调用类方法
 ```php
 use Superzc\QQConnect\QQConnect;
+use Superzc\QQConnect\Exceptions\DefaultException as QCException;
 
-$qqconnect = new QQConnect();
-$qqconnect->init($openid, $access_token);
-$result = $qqconnect->doSomething();
+try {
+    $qqconnect = new QQConnect();
+    $qqconnect->init($openid, $access_token);
+    $result = $qqconnect->doSomething();
+} catch (MPDefaultException $e) {
+    return response()->json([
+        'ret' => $e->getCode(),
+        'msg' => $e->getMessage(),
+    ]);
+}
 ```
 
 使用门面
 ```php
 use Superzc\QQConnect\Facades\QQConnect;
 
-QQConnect::init($openid, $access_token);
-$result = QQConnect::doSomething();
+try {
+    QQConnect::init($openid, $access_token);
+    $result = QQConnect::doSomething();
+} catch (QCException $e) {
+    return response()->json([
+        'ret' => $e->getCode(),
+        'msg' => $e->getMessage(),
+    ]);
+}
 ```
-
 
 ## Change log
 暂无
