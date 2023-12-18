@@ -16,6 +16,15 @@ composer require superzc/qqconnect
 
 ## Usage
 
+修改QQ互联配置文件`config/qqconnect.php`
+```php
+return [
+    'appid' => 'xxx',
+    'appkey' => 'xxx',
+    'callback' => 'https://example.com/qc_redirect.html',
+];
+```
+
 调用类方法
 ```php
 use Superzc\QQConnect\QQConnect;
